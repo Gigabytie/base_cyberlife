@@ -44,7 +44,7 @@ extern vec3_t gPainPoint;
 //==================================================================
 
 // the "gameversion" client command will print this plus compile date
-#define	GAMEVERSION	"OpenJK"
+#define	GAMEVERSION	"cyberlife"
 
 #define SECURITY_LOG "security.log"
 
@@ -469,6 +469,11 @@ typedef struct clientSession_s {
 	char		siegeClass[64];
 	int			duelTeam;
 	int			siegeDesiredTeam;
+
+	int         kills; // сохранение убийств совершенные игроком
+	int         deaths; // сохранение смертей, совершенных игроком
+	int         damageDealt; // сохранение статистики нанесенного урона
+	int         damageTaken; // сохранение статистики полученного урона
 
 	char		IP[NET_ADDRSTRMAXLEN];
 } clientSession_t;
