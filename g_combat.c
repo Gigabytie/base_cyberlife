@@ -5213,6 +5213,23 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		client->damage_armor += asave;
 		client->damage_blood += take;
 		client->damage_knockback += knockback;
+		if (targ->health > 0 && !(targ->s.eFlags & EF_DEAD)) {
+			if (targ->health > 0) {
+				if (take < 0) {
+					take = 0; // не может быть отрицательного урона
+				}
+				int actualDamageTaken = take + asave;
+				if (actualDamageTaken > targ->health) {
+					actualDamageTaken = targ->health;
+				}
+				if (attacker && attacker->client) {
+					attacker->client->sess.damageDealt += actualDamageTaken;  // записываем урон
+					if (targ && targ->client) {
+						targ->client->sess.damageTaken += actualDamageTaken;  // записываем полученный урон
+					}
+				}
+			}
+		}
 		if ( dir ) {
 			VectorCopy ( dir, client->damage_from );
 			client->damage_fromWorld = qfalse;
