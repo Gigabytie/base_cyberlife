@@ -121,6 +121,49 @@ void Cmd_Score_f( gentity_t *ent ) {
 	DeathmatchScoreboardMessage( ent );
 }
 
+void Cmd_GlobalStats_f() {
+	char redTeamStats[1024] = "^1=== RED TEAM STATS ===\n";  // Буфер для красной команды
+	char blueTeamStats[1024] = "^4=== BLUE TEAM STATS ===\n"; // Буфер для синей команды
+
+	for (int i = 0; i < level.maxclients; i++) {
+		gentity_t* cl = &g_entities[i];
+
+		if (!cl->client || !cl->inuse) {
+			continue; // Пропускаем неактивные сущности
+		}
+
+		if (cl->client->sess.sessionTeam == TEAM_SPECTATOR) {
+			continue; // Пропускаем наблюдателей
+		}
+
+		if (g_gametype.integer != GT_TEAM) {
+			trap->SendServerCommand(-1, "print \"^7This command is only available in team-based games.\\n\""); // только командные режимы
+			return;
+		}
+
+		char playerStats[128];
+		Com_sprintf(playerStats, sizeof(playerStats),
+			"^3%s: ^2%d ^7Kills, ^1%d ^7Deaths, ^5%d ^7DamageDealt, ^4%d ^7DamageTaken\n",
+			cl->client->pers.netname,
+			cl->client->sess.kills,
+			cl->client->sess.deaths,
+			cl->client->sess.damageDealt,
+			cl->client->sess.damageTaken);
+
+		// Добавляем статистику в соответствующий буфер
+		if (cl->client->sess.sessionTeam == TEAM_RED) {
+			Q_strcat(redTeamStats, sizeof(redTeamStats), playerStats);
+		}
+		else if (cl->client->sess.sessionTeam == TEAM_BLUE) {
+			Q_strcat(blueTeamStats, sizeof(blueTeamStats), playerStats);
+		}
+	}
+
+	// Отправляем статистику в чат
+	trap->SendServerCommand(-1, va("print \"%s\"", redTeamStats));
+	trap->SendServerCommand(-1, va("print \"%s\"", blueTeamStats));
+}
+
 /*
 ==================
 ConcatArgs
@@ -3429,6 +3472,7 @@ command_t commands[] = {
 	{ "voice_cmd",			Cmd_VoiceCommand_f,			CMD_NOINTERMISSION },
 	{ "vote",				Cmd_Vote_f,					CMD_NOINTERMISSION },
 	{ "where",				Cmd_Where_f,				CMD_NOINTERMISSION },
+	{ "stats",              Cmd_GlobalStats_f,          CMD_NOINTERMISSION } // добавить ограничение чтобы только наблюдатели могли вызывать команду во время матча.
 };
 static const size_t numCommands = ARRAY_LEN( commands );
 
