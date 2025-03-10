@@ -2011,6 +2011,7 @@ void CheckExitRules( void ) {
 				{
 					Com_Printf("POWERDUEL WIN CONDITION: Timelimit hit (1)\n");
 				}
+				Cmd_GlobalStats_f();
 				LogExit( "Timelimit hit." );
 				return;
 			}
@@ -2158,6 +2159,7 @@ void CheckExitRules( void ) {
 			{
 				Com_Printf("POWERDUEL WIN CONDITION: Kill limit (1)\n");
 			}
+			Cmd_GlobalStats_f();
 			LogExit( sKillLimit );
 			return;
 		}
@@ -2168,6 +2170,7 @@ void CheckExitRules( void ) {
 			{
 				Com_Printf("POWERDUEL WIN CONDITION: Kill limit (2)\n");
 			}
+			Cmd_GlobalStats_f();
 			LogExit( sKillLimit );
 			return;
 		}
