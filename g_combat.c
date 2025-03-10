@@ -2089,32 +2089,25 @@ extern qboolean g_endPDuel;
 extern qboolean g_noPDuelCheck;
 extern void saberReactivate(gentity_t *saberent, gentity_t *saberOwner);
 extern void saberBackToOwner(gentity_t *saberent);
-void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath ) {
-	gentity_t	*ent;
+void player_die(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int meansOfDeath) {
+	gentity_t* ent;
 	int			anim;
 	int			killer;
 	int			i;
-	char		*killerName, *obit;
+	char* killerName, * obit;
 	qboolean	wasJediMaster = qfalse;
 	int			sPMType = 0;
-	char		buf[512] = {0};
+	char		buf[512] = { 0 };
 
-	if ( self->client->ps.pm_type == PM_DEAD ) {
+	if (self->client->ps.pm_type == PM_DEAD) {
 		return;
 	}
 
-	if ( level.intermissiontime ) {
+	if (level.intermissiontime) {
 		return;
 	}
 
-	if ( !attacker )
-		return;
-	if (attacker && attacker->client && attacker != self) {
-		attacker->client->sess.kills++;  // count kills
-	}
-	if (self->client) {
-		self->client->sess.deaths++;  // count deaths
-	}
+	if (!attacker) return;
 
 	//check player stuff
 	g_dontFrickinCheck = qfalse;
@@ -5210,11 +5203,24 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 	// add to the damage inflicted on a player this frame
 	// the total will be turned into screen blends and view angle kicks
 	// at the end of the frame
-	if ( client ) {
-		if ( attacker ) {
+	if (client) {
+		if (attacker) {
 			client->ps.persistant[PERS_ATTACKER] = attacker->s.number;
-		} else {
+		}
+		else {
 			client->ps.persistant[PERS_ATTACKER] = ENTITYNUM_WORLD;
+		}
+		if (mod == MOD_FALLING || mod == MOD_CRUSH || mod == MOD_TRIGGER_HURT) {
+			int envDamage = damage;
+			if (envDamage > targ->health) {
+				envDamage = targ->health; // ignore armor because damage goes through armor
+			}
+			if (envDamage < 0) {
+				envDamage = 0; // it can't be negative damage
+			}
+			if (targ && targ->client) {
+				targ->client->sess.damageTaken += envDamage;  // environmental damage
+			}
 		}
 		client->damage_armor += asave;
 		client->damage_blood += take;
@@ -5222,7 +5228,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		if (targ->health > 0 && !(targ->s.eFlags & EF_DEAD)) {
 			if (targ->health > 0) {
 				if (take < 0) {
-					take = 0; // cant be negative damage
+					take = 0; // it can't be negative damage
 				}
 				int actualDamageTaken = take + asave;
 				if (actualDamageTaken > targ->health) {
@@ -5232,6 +5238,15 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 					attacker->client->sess.damageDealt += actualDamageTaken;  // add damage dealt
 					if (targ && targ->client) {
 						targ->client->sess.damageTaken += actualDamageTaken;  // add damage taken
+					}
+				}
+				if (targ->health - actualDamageTaken <= 0) {  // if enemy health < 0 do some job
+					if (targ->client) {
+						targ->client->sess.deaths++;  // death has come
+					}
+
+					if (attacker && attacker->client && attacker != targ) {
+						attacker->client->sess.kills++;  // count the kill to the attacker (but not as a suicide)
 					}
 				}
 			}
@@ -5563,7 +5578,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 				}
 			}
 		}
-
 		G_LogWeaponDamage(attacker->s.number, mod, take);
 	}
 
