@@ -2109,6 +2109,12 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
 	if ( !attacker )
 		return;
+	if (attacker && attacker->client && attacker != self) {
+		attacker->client->sess.kills++;  // count kills
+	}
+	if (self->client) {
+		self->client->sess.deaths++;  // count deaths
+	}
 
 	//check player stuff
 	g_dontFrickinCheck = qfalse;
@@ -5216,16 +5222,16 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		if (targ->health > 0 && !(targ->s.eFlags & EF_DEAD)) {
 			if (targ->health > 0) {
 				if (take < 0) {
-					take = 0; // не может быть отрицательного урона
+					take = 0; // cant be negative damage
 				}
 				int actualDamageTaken = take + asave;
 				if (actualDamageTaken > targ->health) {
-					actualDamageTaken = targ->health;
+					actualDamageTaken = targ->health; // if damage bigger than hp
 				}
 				if (attacker && attacker->client) {
-					attacker->client->sess.damageDealt += actualDamageTaken;  // записываем урон
+					attacker->client->sess.damageDealt += actualDamageTaken;  // add damage dealt
 					if (targ && targ->client) {
-						targ->client->sess.damageTaken += actualDamageTaken;  // записываем полученный урон
+						targ->client->sess.damageTaken += actualDamageTaken;  // add damage taken
 					}
 				}
 			}
